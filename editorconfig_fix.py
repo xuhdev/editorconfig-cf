@@ -167,6 +167,9 @@ def main():
 
             files_to_process.extend(f.readlines())
 
+    # add the rest of args to the list of files to be processed
+    files_to_process.extend(args)
+
     # strip all the entries in files_to_process
     files_to_process = [f.strip() for f in files_to_process]
 
