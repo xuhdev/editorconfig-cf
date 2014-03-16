@@ -100,7 +100,9 @@ def fix_one_file(file_path):
     import os
     import editorconfig
 
-    _, ext = os.path.splitext(file_path)
+    path = os.path.abspath(file_path)
+
+    _, ext = os.path.splitext(path)
 
     # check the corresponding language
     ext = ext[1:]
@@ -111,34 +113,35 @@ def fix_one_file(file_path):
     lang_info = get_language_info(lang)
 
     # get editorconfig properties
-    ec_properties = editorconfig.get_properties(file_path)
+    ec_properties = editorconfig.get_properties(path)
 
     succeed = -1
     for b in lang_info['beautifier']:
         b_info = get_beautifier_info(lang, b)
         # If the spawning succeeds, then we are finished; otherwise, let's try
         # the next beautifier 
-        if b_info['func_handling'](b_info['executable'], file_path, file_path + global_options['output_suffix'], ec_properties) == 0:
+        if b_info['func_handling'](b_info['executable'], path, path + global_options['output_suffix'], ec_properties) == 0:
             succeed = 0
             break
 
     if succeed != 0:
-        raise EditorConfigFixError('Failed to fix "' + file_path + '"')
+        raise EditorConfigFixError('Failed to fix "' + path + '"')
 
-def fix_files(file_path):
+def fix_files(file_paths):
     """
-    Recursively fix the file with a path of file_path 
+    Recursively fix the files with paths of file_paths 
     """
     import os,sys
 
-    if os.path.isdir(file_path):
-        for f in os.listdir(file_path):
-            fix_files(os.path.join(file_path, f))
+    for file_path in file_paths:
+        if os.path.isdir(file_path):
+            for f in os.listdir(file_path):
+                fix_files(os.path.join(file_path, f))
 
-    try:
-        fix_one_file(file_path)
-    except EditorConfigFixError as e:
-        print('Warning: ' + e, file=sys.stderr)
+        try:
+            fix_one_file(file_path)
+        except EditorConfigFixError as e:
+            print('Warning: ' + e, file=sys.stderr)
 
 def main():
     import sys
@@ -146,12 +149,28 @@ def main():
     import getopt
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], '')
+        opts, args = getopt.getopt(sys.argv[1:], 'f:')
     except:
         print('Argument error.', file=sys.stderr)
         sys.exit(1)
 
-    fix_files(os.path.abspath(args[0]))
+    files_to_process = []
+
+    for option, arg in opts:
+        # Read a list of file paths from the specified file
+        if option == '-f':
+            f = None
+            if arg == '-':
+                f = sys.stdin
+            else:
+                f = open(arg, 'r')
+
+            files_to_process.extend(f.readlines())
+
+    # strip all the entries in files_to_process
+    files_to_process = [f.strip() for f in files_to_process]
+
+    fix_files(files_to_process)
 
 if __name__ == '__main__':
     main()
