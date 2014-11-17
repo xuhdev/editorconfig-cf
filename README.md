@@ -17,10 +17,10 @@ This script does not touch your code directly; instead, it calls language specif
 When given a file, it first see what type this file is according to its extension. After determining the type of the
 source file, EditorConfig-cf tries to call the corresponding beautifiers it knows. If a beautifier is found to be
 usable, EditorConfig-cf calls the beautifier to check or fix the source code and outputs the fixed code into a file with
-`.ecfix` extension.
+`.ecfmt` extension.
 
 For example, when dealing with a C source file named `main.c`, EditorConfig-cf tries to call [uncrustify][]. If
-uncrustify is available, it will be used to format this C source file, and write the output into `main.c.ecfix`.
+uncrustify is available, it will be used to format this C source file, and write the output into `main.c.ecfmt`.
 
 ## Contribution
 
