@@ -2,17 +2,17 @@
 
 # Copyright (C) 2014 Hong Xu <hong@topbug.net>
 #
-# This file is part of EditorConfig-Fix.
+# This file is part of EditorConfig-cf.
 #
-# EditorConfig-Fix is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
+# EditorConfig-cf is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
 # later version.
 #
-# EditorConfig-Fix is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+# EditorConfig-cf is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
 # warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
 # details.
 #
-# You should have received a copy of the GNU Lesser General Public License along with EditorConfig-Fix.  If not, see
+# You should have received a copy of the GNU Lesser General Public License along with EditorConfig-cf.  If not, see
 # <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
@@ -23,7 +23,7 @@ BEAUTIFIER_OPTIONS_OUTPUT = 3
 
 global_options = {
         'editorconfig':      'editorconfig',
-        'output_suffix':     '.ecfix'
+        'output_suffix':     '.ecfmt'
         }
 
 extension_language_map = {
@@ -33,29 +33,33 @@ extension_language_map = {
         'hpp': 'cpp'
         }
 
-class EditorConfigFixError(Exception):
+class EditorConfigCfError(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
 
-def get_language_info(lang):
+def get_language_info(lang, c_or_f):
     """
-    Obtain the information needed for a given language.
+    Obtain the information needed for a given language. c_or_f indicates whether it's a checker or formatter.
     """
 
-    if lang == 'c':
-        return dict(
-                id=             'c',
-                name=           'C',
-                beautifier=     ['uncrustify'])
-    elif lang == 'cpp':
-        return dict(
-                id=             'cpp',
-                name=           'C++',
-                beautifier=     ['uncrustify'])
-    else:
-        return None
+    if c_or_f == 'f': # formatter
+        if lang == 'c':
+            return dict(
+                    id=             'c',
+                    name=           'C',
+                    beautifier=     ['uncrustify'])
+        elif lang == 'cpp':
+            return dict(
+                    id=             'cpp',
+                    name=           'C++',
+                    beautifier=     ['uncrustify'])
+        else:
+            return None
+
+    elif c_or_f == 'c':
+        pass
 
 def get_beautifier_info(lang, beautifier):
     """
@@ -74,9 +78,9 @@ def get_beautifier_info(lang, beautifier):
     else:
         return None
 
-def fix_one_file(file_path):
+def process_one_file(file_path, c_or_f):
     """
-    Fix one file with a file path file_path
+    Format one file with a file path file_path
     """
     import os
     import editorconfig
@@ -91,7 +95,7 @@ def fix_one_file(file_path):
         return 2
 
     lang = extension_language_map[ext]
-    lang_info = get_language_info(lang)
+    lang_info = get_language_info(lang, c_or_f)
 
     # get editorconfig properties
     ec_properties = editorconfig.get_properties(path)
@@ -99,29 +103,28 @@ def fix_one_file(file_path):
     succeed = -1
     for b in lang_info['beautifier']:
         b_info = get_beautifier_info(lang, b)
-        # If the spawning succeeds, then we are finished; otherwise, let's try
-        # the next beautifier
-        if b_info['func_handling'](b_info['executable'], path, path + global_options['output_suffix'], ec_properties) == 0:
+        # If the spawning succeeds, then we are finished; otherwise, let's try the next beautifier
+        if b_info['func_handling'](b_info['executable'], path, path + global_options['output_suffix'], ec_properties, c_or_f) == 0:
             succeed = 0
             break
 
     if succeed != 0:
-        raise EditorConfigFixError('Failed to fix "' + path + '"')
+        raise EditorConfigCfError('Failed to format "' + path + '"')
 
-def fix_files(file_paths):
+def process_files(file_paths, c_or_f):
     """
-    Recursively fix the files with paths of file_paths
+    Recursively format the files with paths of file_paths
     """
     import os,sys
 
     for file_path in file_paths:
         if os.path.isdir(file_path):
             for f in os.listdir(file_path):
-                fix_files(os.path.join(file_path, f))
+                format_files(os.path.join(file_path, f))
 
         try:
-            fix_one_file(file_path)
-        except EditorConfigFixError as e:
+            process_one_file(file_path, c_or_f)
+        except EditorConfigCfError as e:
             print('Warning: ' + e, file=sys.stderr)
 
 def main():
@@ -129,8 +132,20 @@ def main():
     import os
     import getopt
 
+    if len(sys.argv) == 1:
+        print('Subcommand missing', file=sys.stderr)
+
+    # check subcommand -- check or format
+    if sys.argv[1] == 'check' or sys.argv[1] == 'c':
+        c_or_f = 'c'
+    elif sys.argv[1] == 'format' or sys.argv[1] == 'f':
+        c_or_f = 'f'
+    else:
+        print('Unknown subcommand.', file=sys.stderr)
+        sys.exit(1)
+
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'f:')
+        opts, args = getopt.getopt(sys.argv[2:], 'f:')
     except:
         print('Argument error.', file=sys.stderr)
         sys.exit(1)
@@ -154,7 +169,7 @@ def main():
     # strip all the entries in files_to_process
     files_to_process = [f.strip() for f in files_to_process]
 
-    fix_files(files_to_process)
+    process_files(files_to_process, c_or_f)
 
 if __name__ == '__main__':
     main()

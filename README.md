@@ -1,25 +1,25 @@
-# EditorConfig-Fix
+# EditorConfig-cf -- EditorConfig Checker and Formatter
 
-This python program uses the rule given in [EditorConfig][] files to fix your coding style.
+This python program uses the rule given in [EditorConfig][] files to check and fix your coding style.
 
 It is still under development, but your contribution is highly appreciated, since I do not use all languages!
 
 ## Usage
 
-    python /path/to/editorconfig_fix.py [file1] [file2] [file3] ...
+    python /path/to/editorconfig_cf.py [check|format] [file1] [file2] [file3] ...
 
-where `[file1]`, `[file2]`, `[file3]`, ... are the source files you want to fix.
+where `[file1]`, `[file2]`, `[file3]`, ... are the source files you want to check or format.
 
 ## How It Works
 
-This script does not touch your code directly; instead, it calls language specific beautifier to fix.
+This script does not touch your code directly; instead, it calls language specific beautifier to check and fix.
 
-When given a file to fix, it first see what type this file is according to its extension. After determining the type of
-the source file, EditorConfig-Fix tries to call the corresponding beautifiers it knows. If a beautifier is found to be
-usable, EditorConfig-Fix calls the beautifier to fix the source code and outputs the fixed code into a file with
+When given a file, it first see what type this file is according to its extension. After determining the type of the
+source file, EditorConfig-cf tries to call the corresponding beautifiers it knows. If a beautifier is found to be
+usable, EditorConfig-cf calls the beautifier to check or fix the source code and outputs the fixed code into a file with
 `.ecfix` extension.
 
-For example, when dealing with a C source file named `main.c`, EditorConfig-Fix tries to call [uncrustify][]. If
+For example, when dealing with a C source file named `main.c`, EditorConfig-cf tries to call [uncrustify][]. If
 uncrustify is available, it will be used to format this C source file, and write the output into `main.c.ecfix`.
 
 ## Contribution
@@ -40,13 +40,14 @@ Create a new file for your beautifier in the `handling` directory. You need to d
 
 Where `executable` is the `executable` of the beautifier to be passed in, `input_file_path` is the file needs to be
 formatted, `output_file_path` is where the formatted file should be written into, `editorconfig_properties` is the
-output of EditorConfig library passed in (see [EditorConfig Python Core Document]() for what this variable is). You need
-to fill this function so that the framework can call this function to handle the specific type of file with the specific
-beautifier. You will tell the location of this function later.
+output of EditorConfig library passed in (see [EditorConfig Python Core Document][] for what this variable is), `c_or_f`
+shows whether this is checking ('c') or formatting ('f'). You need to fill this function so that the framework can call
+this function to handle the specific type of file with the specific beautifier. You will tell the location of this
+function later.
 
 #### Add Meta Information of Beautifier
 
-Edit `editorconfig_fix.py`, check the function `get_language_info` and `get_beautifier_info`. Check the existing
+Edit `editorconfig_cf.py`, check the function `get_language_info` and `get_beautifier_info`. Check the existing
 beautifier and insert meta info of the beautifier you are going to add.
 
 #### Add Tests in the `tests` Directory
