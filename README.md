@@ -22,7 +22,9 @@ usable, EditorConfig-Fix calls the beautifier to fix the source code and outputs
 For example, when dealing with a C source file named `main.c`, EditorConfig-Fix tries to call [uncrustify][]. If
 uncrustify is available, it will be used to format this C source file, and write the output into `main.c.ecfix`.
 
-## How Can I Add Beautifier for My Favorite language?
+## Contribution
+
+### How Can I Add Beautifier for My Favorite language?
 
 The framework is already there, what you need is to add your own handling function to handle this type of file with the
 beautifier in the `handling` directory, then insert a few lines to tell some information about the beautifier (such as name,
@@ -30,7 +32,7 @@ for what language).
 
 Here are the details.
 
-### Add Handling Function for Your Beautifier
+#### Add Handling Function for Your Beautifier
 
 Create a new file for your beautifier in the `handling` directory. You need to define a function with the following prototype:
 
@@ -42,16 +44,31 @@ output of EditorConfig library passed in (see [EditorConfig Python Core Document
 to fill this function so that the framework can call this function to handle the specific type of file with the specific
 beautifier. You will tell the location of this function later.
 
-### Add Meta Information of Beautifier
+#### Add Meta Information of Beautifier
 
 Edit `editorconfig_fix.py`, check the function `get_language_info` and `get_beautifier_info`. Check the existing
 beautifier and insert meta info of the beautifier you are going to add.
 
-### Add Tests in the `tests` Directory
+#### Add Tests in the `tests` Directory
 
 This should be fairly straightforward. Simply refer the other tests and modify it.
 
+### Contribution License
+
+If you added any new files, remember you need to add a license header as the other files do. If you code is less than 50
+effective lines, you can simply copy a header from another file and copyright it under my name. If you do not want to
+copyright it under my name, I will not be against copyright under your name. But your license must be compatible with
+the other part of the project, that is, a permissive license (Apache v2, BSD, MIT, etc.) or LGPLv3+ (the `+` sign is
+important!). LGPLv2 or GPL are not acceptable.
+
+## License
+
+Copyright (C) Hong Xu <hong@topbug.net>
+
+Unless otherwise stated, most files are licensed under [GNU Lesser General Public License Version 3][] or later. See the
+header of each file for license details.
 
 [uncrustify]: http://uncrustify.sourceforge.net
 [EditorConfig]: http://editorconfig
 [EditorConfig Python Core Document]: http://pydocs.editorconfig.org/en/latest/usage.html
+[GNU Lesser General Public License Version 3]: https://www.gnu.org/licenses/lgpl.html
