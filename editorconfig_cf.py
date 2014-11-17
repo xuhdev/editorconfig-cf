@@ -30,7 +30,8 @@ extension_language_map = {
         'c': 'c',
         'cpp': 'cpp',
         'h': 'cpp',
-        'hpp': 'cpp'
+        'hpp': 'cpp',
+        'py': 'python'
         }
 
 class EditorConfigCfError(Exception):
@@ -43,29 +44,33 @@ def get_language_info(lang, c_or_f):
     """
     Obtain the information needed for a given language. c_or_f indicates whether it's a checker or formatter.
     """
-
     if c_or_f == 'f': # formatter
         if lang == 'c':
             return dict(
-                    id=             'c',
-                    name=           'C',
-                    beautifier=     ['uncrustify'])
+                    id= 'c',
+                    name= 'C',
+                    beautifier= ['uncrustify'])
         elif lang == 'cpp':
             return dict(
-                    id=             'cpp',
-                    name=           'C++',
-                    beautifier=     ['uncrustify'])
+                    id= 'cpp',
+                    name= 'C++',
+                    beautifier= ['uncrustify'])
         else:
             return None
 
     elif c_or_f == 'c':
-        pass
+        if lang == 'python':
+            return dict(
+                    id= 'python',
+                    name= 'Python',
+                    beautifier= ['pylint'])
+        else:
+            return None
 
 def get_beautifier_info(lang, beautifier):
     """
-    Obtain the information needed for a given beautifier.
+    Obtain the information needed by a given beautifier
     """
-
     if beautifier == 'uncrustify':
         import handling.uncrustify
 
@@ -75,6 +80,15 @@ def get_beautifier_info(lang, beautifier):
                 language=       'c',
                 executable=     'uncrustify',
                 func_handling=  handling.uncrustify.handling)
+    elif beautifier == 'pylint':
+        import handling.pylint
+
+        return dict(
+                id=             'pylint',
+                name=           'Pylint',
+                language=       'python',
+                executable=     'pylint',
+                func_handling=  handling.pylint.handling)
     else:
         return None
 
@@ -83,6 +97,7 @@ def process_one_file(file_path, c_or_f):
     Format one file with a file path file_path
     """
     import os
+    import shutil
     import editorconfig
 
     path = os.path.abspath(file_path)
@@ -103,13 +118,15 @@ def process_one_file(file_path, c_or_f):
     succeed = -1
     for b in lang_info['beautifier']:
         b_info = get_beautifier_info(lang, b)
+        if shutil.which(b_info['executable']) == None: # The executable does not exist
+            continue
         # If the spawning succeeds, then we are finished; otherwise, let's try the next beautifier
         if b_info['func_handling'](b_info['executable'], path, path + global_options['output_suffix'], ec_properties, c_or_f) == 0:
             succeed = 0
             break
 
     if succeed != 0:
-        raise EditorConfigCfError('Failed to format "' + path + '"')
+        raise EditorConfigCfError('Failed to check/format "' + path + '"')
 
 def process_files(file_paths, c_or_f):
     """
