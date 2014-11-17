@@ -24,42 +24,6 @@ class EditorConfigFixError(Exception):
     def __str__(self):
         return repr(self.value)
 
-def uncrustify_handling(executable, input_file_path, output_file_path, editorconfig_properties):
-    import subprocess
-    import sys
-    import tempfile
-
-    # The temp config file
-    cfg = tempfile.NamedTemporaryFile(mode='w', suffix='.cfg')
-    for key, value in editorconfig_properties.items():
-        if key == 'tab_width':
-            cfg.write('input_tab_size = ' + value + '\n')
-            cfg.write('output_tab_size = ' + value + '\n')
-        if key == 'indent_size':
-            if value == 'tab':
-                if 'tab_width' in editorconfig_properties:
-                    cfg.write('indent_columns = ' + cfg['tab_width'] + '\n')
-                else:
-                    cfg.write('indent_columns = 8\n')
-            else:
-                cfg.write('indent_columns = ' + value + '\n')
-        if key == 'indent_style':
-            if value == 'space':
-                cfg.write('indent_with_tabs = 0\n')
-            elif value == 'tab':
-                cfg.write('indent_with_tabs = 1\n')
-        if key == 'end_of_line':
-            cfg.write('newlines = ' + value + '\n')
-
-    # Need to write to disk
-    cfg.flush()
-
-    # execute uncrustify
-    cmd = [executable, '-c', cfg.name, '-f', input_file_path, '-o', output_file_path]
-    print('Executing: ' + ' '.join(cmd), file=sys.stderr)
-    return subprocess.call(cmd, shell=False)
-
-
 def get_language_info(lang):
     """
     Obtain the information needed for a given language.
@@ -84,12 +48,14 @@ def get_beautifier_info(lang, beautifier):
     """
 
     if beautifier == 'uncrustify':
+        import handling.uncrustify
+
         return dict(
                 id=             'uncrustify',
                 name=           'Uncrustify',
                 language=       'c',
                 executable=     'uncrustify',
-                func_handling=  uncrustify_handling)
+                func_handling=  handling.uncrustify.handling)
     else:
         return None
 
@@ -119,7 +85,7 @@ def fix_one_file(file_path):
     for b in lang_info['beautifier']:
         b_info = get_beautifier_info(lang, b)
         # If the spawning succeeds, then we are finished; otherwise, let's try
-        # the next beautifier 
+        # the next beautifier
         if b_info['func_handling'](b_info['executable'], path, path + global_options['output_suffix'], ec_properties) == 0:
             succeed = 0
             break
@@ -129,7 +95,7 @@ def fix_one_file(file_path):
 
 def fix_files(file_paths):
     """
-    Recursively fix the files with paths of file_paths 
+    Recursively fix the files with paths of file_paths
     """
     import os,sys
 
