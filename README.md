@@ -58,9 +58,9 @@ This should be fairly straightforward. Simply refer the other tests and modify i
 
 If you added any new files, remember you need to add a license header as the other files do. If you code is less than 50
 effective lines, you can simply copy a header from another file and copyright it under my name. If you do not want to
-copyright it under my name, I will not be against copyright under your name. But your license must be compatible with
-the other part of the project, that is, a permissive license (Apache v2, BSD, MIT, etc.) or LGPLv3+ (the `+` sign is
-important!). LGPLv2 or GPL are not acceptable.
+copyright the code under my name, I will not be against copyright under your name. I encourage you to license under
+LGPLv3+, but at least your license must be compatible with the other part of the project, that is, a permissive license
+(Apache v2, BSD, MIT, etc.) or LGPLv3+. LGPLv2 or GPL are not acceptable.
 
 ## License
 
